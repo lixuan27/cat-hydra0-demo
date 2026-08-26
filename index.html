@@ -52,8 +52,9 @@ in this literature uses makes the central question unanswerable.</p>
 <div class="card warn">
 <b>Reading discipline used throughout.</b> Every arm is reported against its floors, every
 comparison that is not statistically resolved is labelled as such on the figure itself, and
-results that turned out to be measuring our own harness are marked <b>INVALID</b> rather than
-quietly dropped. Two figures below exist specifically to record that.
+results that turned out to be measuring our own harness are reported as such rather than
+quietly dropped &mdash; one section below exists specifically to record a run we invalidated
+and what its control caught.
 </div>
 
 <h2>What the world model loses, and to what</h2>
@@ -122,12 +123,22 @@ placement are identical; the body is not.</figcaption></figure>
 <code>sideview</code> (highest score) and lost the task object; the correct choice,
 <code>frontview</code>, scored <em>lowest</em>. The camera was chosen by looking.</figcaption></figure>
 
-<h2>A result we are reporting as invalid</h2>
-<figure><img src="figs/06_l4_sr_invalid.png" alt="L4 success rate, invalid run">
-<figcaption>Downstream task success has veto power in this project. This run does not carry
-it: the no-tokenizer control scored far below its independently validated value, which means
-the harness&rsquo;s own reconstruction &mdash; not the code &mdash; was being measured. Rerun
-in progress.</figcaption></figure>
+<h2>The verdict: downstream task success</h2>
+<p>This axis has veto power in the project, and it had never been applied to this tokenizer.
+The first run was <em>invalid</em> and its own control caught it: the no-tokenizer
+&ldquo;chunked&rdquo; arm scored 0.269 against an independently validated 0.756, meaning the
+harness&rsquo;s reconstruction &mdash; not the code &mdash; was being measured. With the
+validated upsampler the control returns to 0.789, and the real answer appears.</p>
+<figure><img src="figs/06_l4_sr.png" alt="L4 success rate">
+<figcaption>Actions passed through the code succeed on <b>0 of 52</b> episodes &mdash;
+identical to all-zero actions &mdash; against a fair ceiling of 0.789. Whatever the
+representation-layer metrics say, this code does not preserve executable action.</figcaption></figure>
+<div class="card warn">
+<b>Why the control mattered.</b> Had we run only ground truth versus decoded, we would have
+reached the <em>correct</em> conclusion (&ldquo;tokenizer scores zero, veto&rdquo;) on the
+basis of <em>wrong</em> evidence &mdash; 0.52 of that first gap was our own reconstruction
+defect, not the code.
+</div>
 
 <h2>Summary of measured numbers</h2>
 <table>
@@ -145,6 +156,10 @@ in progress.</figcaption></figure>
     <td>0.08 &ndash; 0.34</td><td>weakly</td></tr>
 <tr><td>Is the code embodiment-agnostic?</td><td>within-stratum corpus AUC</td>
     <td>scene alone 1.0000</td><td>unmeasurable on this corpus</td></tr>
+<tr><td><b>Can a robot still do the task?</b></td><td>LIBERO success rate</td>
+    <td><b>0.000</b> vs fair ceiling 0.789</td><td><b>veto</b></td></tr>
+<tr><td>Does flow supervision cut integrated drift?</td><td>drift/per-step, 3 seed-matched pairs</td>
+    <td>12.83 vs 13.22, ranges overlap</td><td>negative (n=3)</td></tr>
 </table>
 
 <footer>
