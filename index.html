@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAT &times; Hydra-0 &mdash; cross-embodiment action representation</title>
+<style>
+  :root { --fg:#1a1a1a; --mut:#606060; --bg:#ffffff; --card:#f7f7f8; --line:#e2e2e5;
+          --good:#2a7fbf; --bad:#c44e52; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e8e8ea; --mut:#a0a0a8; --bg:#141416; --card:#1e1e22; --line:#303036; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 22px 90px; }
+  h1 { font-size: 30px; line-height:1.25; margin:0 0 6px; letter-spacing:-.02em; }
+  .sub { color:var(--mut); font-size:15px; margin:0 0 34px; }
+  h2 { font-size:20px; margin:44px 0 10px; letter-spacing:-.01em; }
+  p { margin: 0 0 14px; }
+  .lead { font-size:17px; }
+  figure { margin: 18px 0 8px; }
+  img { max-width:100%; height:auto; display:block; border:1px solid var(--line);
+        border-radius:8px; background:#fff; }
+  figcaption { color:var(--mut); font-size:13.5px; margin-top:8px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+          padding:14px 18px; margin:18px 0; }
+  .card b { color:var(--fg); }
+  table { border-collapse:collapse; width:100%; font-size:14px; margin:12px 0; display:block;
+          overflow-x:auto; white-space:nowrap; }
+  th,td { border-bottom:1px solid var(--line); padding:7px 12px; text-align:left; }
+  th { color:var(--mut); font-weight:600; }
+  code { background:var(--card); padding:1px 5px; border-radius:4px; font-size:13.5px; }
+  .warn { border-left:3px solid var(--bad); padding-left:13px; }
+  .ok { border-left:3px solid var(--good); padding-left:13px; }
+  footer { color:var(--mut); font-size:13px; margin-top:60px; border-top:1px solid var(--line);
+           padding-top:18px; }
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>CAT &times; Hydra-0</h1>
+<p class="sub">Learning a discrete, cross-embodiment action representation constrained
+jointly by robot control and visual motion &mdash; and measuring, honestly, how far that gets.</p>
+
+<p class="lead">This page collects the measured results of a single project. The short version:
+we can compress a world model's motion interface into an action code, the code carries real
+motion content, and we can now say precisely what each design choice buys &mdash; but the
+compression itself, not the discretisation, is what stops it working, and the corpus everyone
+in this literature uses makes the central question unanswerable.</p>
+
+<div class="card warn">
+<b>Reading discipline used throughout.</b> Every arm is reported against its floors, every
+comparison that is not statistically resolved is labelled as such on the figure itself, and
+results that turned out to be measuring our own harness are marked <b>INVALID</b> rather than
+quietly dropped. Two figures below exist specifically to record that.
+</div>
+
+<h2>What the world model loses, and to what</h2>
+<p>The world model is conditioned on <em>action flow</em> &mdash; the image-plane displacement
+of visible surface points. The question is whether that interface survives being squeezed
+through a compact action code. It does not, but the failure decomposes cleanly.</p>
+<figure><img src="figs/01_gate_decomposition.png" alt="Emb-EPE by arm">
+<figcaption>Controllability (Emb-EPE, lower better) of the frozen world model when driven by
+real flow versus flow reconstructed from the code. The continuous arm is the first in this
+project to significantly clear the static floor; every discrete arm fails to.</figcaption></figure>
+
+<figure><img src="figs/02_cost_breakdown.png" alt="Cost breakdown">
+<figcaption>The 24.2&nbsp;px gap between real flow and the static floor, split by cause with
+each step's test status. The largest block by far is compression itself &mdash; which the
+continuous code loses too, so it is not a quantisation problem.</figcaption></figure>
+
+<h2>The result we did not expect</h2>
+<p>We built a rate-matched control: the same number of tokens per frame, but each token pooled
+over the whole image instead of tied to a location. That isolates <em>addressing</em> from
+<em>rate</em>. The two layers give opposite answers.</p>
+<figure><img src="figs/03_rate_vs_addressing.png" alt="Rate versus addressing">
+<figcaption>At the representation layer, extra tokens help and placement adds nothing
+(p&nbsp;=&nbsp;0.33). At the control layer, placement is what the world model needs. A
+tokenizer evaluated only on representation metrics would reach the opposite architectural
+conclusion.</figcaption></figure>
+
+<h2>What the code actually encodes</h2>
+<p>Shuffling the flow in time barely moves the code; reversing the direction of motion moves
+it almost as much as swapping in a completely different event. Order-invariant and
+sign-equivariant is the symmetry structure of a <em>sum</em> &mdash; which is independent
+confirmation that the visual view is supplying the <em>integrated</em> constraint that
+per-step action reconstruction provably cannot.</p>
+<figure><img src="figs/04_temporal_reversal.png" alt="Temporal reversal">
+<figcaption>The same fact is the sharpest limitation: two motions with equal net displacement
+but different temporal profiles are indistinguishable in this code.</figcaption></figure>
+
+<figure><img src="figs/07_rollout_strip.png" alt="Rollout comparison">
+<figcaption>Qualitatively: driven through the code the world model produces plausible video
+that is <em>not the commanded motion</em>. The static floor, for contrast, does not move at
+all.</figcaption></figure>
+
+<h2>Why the central question is currently unanswerable</h2>
+<p>&ldquo;Embodiment-agnostic&rdquo; should mean that given what actually happened in the
+world, the code says nothing extra about which body did it. Testing that requires the body to
+vary independently of everything else. On the standard corpus it does not.</p>
+<figure><img src="figs/05_conditional_identity.png" alt="Conditional identity probe">
+<figcaption>The scene alone identifies the data source at AUC&nbsp;1.0000 <em>within</em> an
+effect stratum, and both encoders take the scene as input. Even the raw inputs are
+near-perfectly separable, so &ldquo;does the code leak identity&rdquo; cannot be separated
+from &ldquo;does the code represent anything&rdquo;.</figcaption></figure>
+
+<div class="card ok">
+<b>The fix, built.</b> We render the <em>same</em> simulated scene with five genuinely
+different robots, verifying rather than asserting that the scenes match (initial object
+layouts agree to under a millimetre across arms). This makes the criterion measurable for the
+first time. It does <em>not</em> make the arm invisible &mdash; after the tie is broken, the
+scene predicting the body is legitimate morphology rather than a dataset fingerprint, and the
+two become distinguishable.
+</div>
+<figure><img src="figs/08_multibody_corpus.png" alt="Multibody corpus">
+<figcaption>Rows are the same scene; columns are different arms. Scene, camera and object
+placement are identical; the body is not.</figcaption></figure>
+
+<figure><img src="figs/09_camera_probe.png" alt="Camera probe">
+<figcaption>Choosing the camera by a pixel-difference metric would have picked
+<code>sideview</code> (highest score) and lost the task object; the correct choice,
+<code>frontview</code>, scored <em>lowest</em>. The camera was chosen by looking.</figcaption></figure>
+
+<h2>A result we are reporting as invalid</h2>
+<figure><img src="figs/06_l4_sr_invalid.png" alt="L4 success rate, invalid run">
+<figcaption>Downstream task success has veto power in this project. This run does not carry
+it: the no-tokenizer control scored far below its independently validated value, which means
+the harness&rsquo;s own reconstruction &mdash; not the code &mdash; was being measured. Rerun
+in progress.</figcaption></figure>
+
+<h2>Summary of measured numbers</h2>
+<table>
+<tr><th>Question</th><th>Arm / metric</th><th>Result</th><th>Status</th></tr>
+<tr><td>Does the code drive the world model?</td><td>Emb-EPE vs static floor</td>
+    <td>continuous 44.52 &middot; spatial 47.96 &middot; floor 53.94 &middot; real flow 29.74</td>
+    <td>all arms fail the &le;10% gate</td></tr>
+<tr><td>Addressing or rate?</td><td>paired, control layer</td>
+    <td>&minus;3.83&nbsp;px, CI [&minus;7.62, &minus;0.19]</td><td>significant</td></tr>
+<tr><td>Discretisation cost?</td><td>continuous &minus; discrete</td>
+    <td>&minus;3.44&nbsp;px, CI [&minus;7.57, +0.28]</td><td>not resolved</td></tr>
+<tr><td>Does the code carry direction?</td><td>reversal / different-event</td>
+    <td>0.77 &ndash; 1.09</td><td>yes, strongly</td></tr>
+<tr><td>Does it carry temporal order?</td><td>shuffle / different-event</td>
+    <td>0.08 &ndash; 0.34</td><td>weakly</td></tr>
+<tr><td>Is the code embodiment-agnostic?</td><td>within-stratum corpus AUC</td>
+    <td>scene alone 1.0000</td><td>unmeasurable on this corpus</td></tr>
+</table>
+
+<footer>
+Results are reproduced from the project ledger. Figures are generated directly from the
+recorded result files; nothing here is recomputed or smoothed. Where a comparison is not
+statistically resolved, the figure says so.
+</footer>
+
+</div></body></html>
