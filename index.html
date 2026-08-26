@@ -140,6 +140,17 @@ basis of <em>wrong</em> evidence &mdash; 0.52 of that first gap was our own reco
 defect, not the code.
 </div>
 
+<h2>The metric this field reports does not predict what it cares about</h2>
+<p>Every action-tokenizer paper we surveyed &mdash; FAST, OAT, ActionCodec, X-Tokenizer &mdash;
+reports per-step reconstruction error as its headline fidelity number. On the same 52
+episodes, that metric and task success come apart completely.</p>
+<figure><img src="figs/10_recon_vs_execution.png" alt="Reconstruction versus execution">
+<figcaption>Per-step error is 2.84&times; worse; integrated error is <b>17.35&times;</b> worse;
+success goes 0.788 to 0.000. The errors did not merely grow, they became more
+<em>correlated</em> (integrated-over-per-step ratio 6.5 &rarr; 39.9), so they accumulate
+instead of cancelling. This is the strongest and most transferable result here, and it does
+not depend on our method working.</figcaption></figure>
+
 <h2>Summary of measured numbers</h2>
 <table>
 <tr><th>Question</th><th>Arm / metric</th><th>Result</th><th>Status</th></tr>
@@ -158,6 +169,8 @@ defect, not the code.
     <td>scene alone 1.0000</td><td>unmeasurable on this corpus</td></tr>
 <tr><td><b>Can a robot still do the task?</b></td><td>LIBERO success rate</td>
     <td><b>0.000</b> vs fair ceiling 0.789</td><td><b>veto</b></td></tr>
+<tr><td><b>Does per-step error predict executability?</b></td><td>per-step vs success</td>
+    <td>2.84&times; worse per-step &rarr; 0.788 to 0.000</td><td><b>no</b></td></tr>
 <tr><td>Does flow supervision cut integrated drift?</td><td>drift/per-step, 3 seed-matched pairs</td>
     <td>12.83 vs 13.22, ranges overlap</td><td>negative (n=3)</td></tr>
 </table>
