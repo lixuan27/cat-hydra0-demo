@@ -3,182 +3,428 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CAT &times; Hydra-0 &mdash; cross-embodiment action representation</title>
+<title>CAT &times; Hydra-0 &mdash; cross-embodiment action tokenizers, measured</title>
 <style>
-  :root { --fg:#1a1a1a; --mut:#606060; --bg:#ffffff; --card:#f7f7f8; --line:#e2e2e5;
-          --good:#2a7fbf; --bad:#c44e52; }
-  @media (prefers-color-scheme: dark) {
-    :root { --fg:#e8e8ea; --mut:#a0a0a8; --bg:#141416; --card:#1e1e22; --line:#303036; }
+  :root{
+    --bg:#ffffff; --fg:#1a1a1a; --muted:#5b6470; --rule:#e2e6ea;
+    --card:#f7f9fb; --accent:#1f77b4; --bad:#d62728; --good:#2ca02c; --warn:#b8860b;
   }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg);
-         font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 22px 90px; }
-  h1 { font-size: 30px; line-height:1.25; margin:0 0 6px; letter-spacing:-.02em; }
-  .sub { color:var(--mut); font-size:15px; margin:0 0 34px; }
-  h2 { font-size:20px; margin:44px 0 10px; letter-spacing:-.01em; }
-  p { margin: 0 0 14px; }
-  .lead { font-size:17px; }
-  figure { margin: 18px 0 8px; }
-  img { max-width:100%; height:auto; display:block; border:1px solid var(--line);
-        border-radius:8px; background:#fff; }
-  figcaption { color:var(--mut); font-size:13.5px; margin-top:8px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
-          padding:14px 18px; margin:18px 0; }
-  .card b { color:var(--fg); }
-  table { border-collapse:collapse; width:100%; font-size:14px; margin:12px 0; display:block;
-          overflow-x:auto; white-space:nowrap; }
-  th,td { border-bottom:1px solid var(--line); padding:7px 12px; text-align:left; }
-  th { color:var(--mut); font-weight:600; }
-  code { background:var(--card); padding:1px 5px; border-radius:4px; font-size:13.5px; }
-  .warn { border-left:3px solid var(--bad); padding-left:13px; }
-  .ok { border-left:3px solid var(--good); padding-left:13px; }
-  footer { color:var(--mut); font-size:13px; margin-top:60px; border-top:1px solid var(--line);
-           padding-top:18px; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171a; --fg:#e9edf1; --muted:#9aa5b1; --rule:#2b3239;
+      --card:#1b1f24; --accent:#5fa8dd; --bad:#ef6b6b; --good:#5cc45c; --warn:#d9ad4a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 22px 90px}
+  h1{font-size:31px;line-height:1.25;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--muted);font-size:17px;margin:0 0 10px}
+  .stamp{color:var(--muted);font-size:13.5px;margin:0 0 30px}
+  h2{font-size:22px;margin:52px 0 6px;padding-top:22px;border-top:1px solid var(--rule);letter-spacing:-.2px}
+  h3{font-size:17px;margin:30px 0 6px}
+  p{margin:11px 0}
+  figure{margin:20px 0 8px}
+  img{max-width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:7px}
+  figcaption{color:var(--muted);font-size:13.5px;margin-top:8px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:9px;padding:15px 18px;margin:20px 0}
+  .tw{overflow-x:auto;margin:16px 0}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+  th,td{border-bottom:1px solid var(--rule);padding:8px 11px;text-align:left}
+  th{font-weight:600;background:var(--card);white-space:nowrap}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  code{background:var(--card);padding:1px 5px;border-radius:4px;font-size:13.5px;
+       font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .bad{color:var(--bad);font-weight:600}
+  .good{color:var(--good);font-weight:600}
+  .warn{color:var(--warn);font-weight:600}
+  .lede{font-size:17.5px;border-left:3px solid var(--accent);padding-left:16px;margin:22px 0}
+  .vids{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:11px;margin:18px 0}
+  .vids figure{margin:0}
+  video{width:100%;border:1px solid var(--rule);border-radius:7px;display:block}
+  .flow{overflow-x:auto;margin:22px 0;padding:6px 0}
+  .flow svg{min-width:900px;display:block}
+  .foot{color:var(--muted);font-size:13.5px;margin-top:50px;border-top:1px solid var(--rule);padding-top:18px}
+  .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:11px;
+        background:var(--card);border:1px solid var(--rule);color:var(--muted);margin-right:6px}
 </style>
 </head>
-<body><div class="wrap">
+<body>
+<div class="wrap">
 
 <h1>CAT &times; Hydra-0</h1>
-<p class="sub">Learning a discrete, cross-embodiment action representation constrained
-jointly by robot control and visual motion &mdash; and measuring, honestly, how far that gets.</p>
+<p class="sub">Reproducing an action-flow world model, and asking what a cross-embodiment
+action tokenizer actually has to preserve.</p>
+<p class="stamp">Academic-scale study &mdash; all training fits in &le;16 H200 GPUs.
+Every number on this page is traceable to a logged SLURM job in the project ledger.
+Last updated 2026-08-28.</p>
 
-<p class="lead">This page collects the measured results of a single project. The short version:
-we can compress a world model's motion interface into an action code, the code carries real
-motion content, and we can now say precisely what each design choice buys &mdash; but the
-compression itself, not the discretisation, is what stops it working, and the corpus everyone
-in this literature uses makes the central question unanswerable.</p>
+<p class="lede">The short version: we reproduced the core claim of the action-flow world
+model on two different video backbones, and it holds &mdash; a spatially <em>placed</em>
+action signal follows commanded motion, while a spatially uniform one is
+<strong>worse than not moving at all</strong>. Then we tried to compress actions into
+discrete tokens, and found that the fidelity metric this entire subfield reports
+<strong>barely predicts whether the actions still work on a robot</strong>.</p>
 
-<div class="card warn">
-<b>Reading discipline used throughout.</b> Every arm is reported against its floors, every
-comparison that is not statistically resolved is labelled as such on the figure itself, and
-results that turned out to be measuring our own harness are reported as such rather than
-quietly dropped &mdash; one section below exists specifically to record a run we invalidated
-and what its control caught.
+<h2>What this project is, in plain terms</h2>
+
+<p>A robot policy has to emit actions. Many recent systems emit them as <em>discrete
+tokens</em>, exactly like a language model emits words, because that lets a
+vision-language model drive a robot without bolting on a separate continuous
+controller. The component that turns continuous motion into a short string of tokens
+and back is an <strong>action tokenizer</strong>.</p>
+
+<p>The appealing idea is a <strong>cross-embodiment</strong> tokenizer: one shared vocabulary
+covering many different robots &mdash; a Franka arm, a UR5e, a Kinova, a two-fingered gripper,
+a mobile manipulator &mdash; so that data collected on one machine helps on another. Papers
+claiming this are common. What is <em>uncommon</em> is checking whether the shared vocabulary
+is genuinely shared, or whether the model has quietly learned to partition it by robot,
+producing what is really a set of per-robot codebooks that happen to share an index space.</p>
+
+<p>Our second thread is a world model called Hydra-0, which conditions video prediction on
+<strong>action flow</strong>: instead of feeding the model a single action vector for the whole
+frame, it paints the action onto the image plane where the motion actually occurs. That
+paper is our own lab's, but its code and weights were lost, so we rebuilt the two
+backbone variants from scratch.</p>
+
+<h2>The whole pipeline at a glance</h2>
+
+<div class="flow">
+<svg viewBox="0 0 980 400" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Pipeline diagram from robot data through canonical action space to tokenizer, world model and downstream policy">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#7a8794"/>
+    </marker>
+    <style>
+      .b{fill:#f0f4f8;stroke:#9fb0c0;stroke-width:1.4;rx:8}
+      .t{font:13px sans-serif;fill:#1a2530}
+      .s{font:11px sans-serif;fill:#5b6470}
+      .l{stroke:#7a8794;stroke-width:1.5;fill:none;marker-end:url(#a)}
+      .hi{fill:#e3f0fa;stroke:#1f77b4;stroke-width:1.8}
+      .rd{fill:#fbe9e9;stroke:#d62728;stroke-width:1.8}
+      @media (prefers-color-scheme: dark){
+        .b{fill:#232a31;stroke:#4a5661} .t{fill:#e9edf1} .s{fill:#9aa5b1}
+        .hi{fill:#1d3547;stroke:#5fa8dd} .rd{fill:#3a2224;stroke:#ef6b6b}
+      }
+    </style>
+  </defs>
+
+  <rect class="b" x="8"  y="20" width="150" height="66"/>
+  <text class="t" x="20" y="44">Multi-robot data</text>
+  <text class="s" x="20" y="62">DROID, LIBERO, OXE,</text>
+  <text class="s" x="20" y="76">robosuite 5-arm corpus</text>
+
+  <rect class="b" x="196" y="20" width="156" height="66"/>
+  <text class="t" x="208" y="44">Canonical space</text>
+  <text class="s" x="208" y="62">every robot mapped to a</text>
+  <text class="s" x="208" y="76">shared 26-D description</text>
+
+  <rect class="hi" x="390" y="14" width="168" height="78" rx="8"/>
+  <text class="t" x="402" y="38">CAT tokenizer</text>
+  <text class="s" x="402" y="56">FSQ, 2048-entry vocab,</text>
+  <text class="s" x="402" y="70">per-body-part codes,</text>
+  <text class="s" x="402" y="84">identity only in decoder</text>
+
+  <rect class="b" x="596" y="20" width="170" height="66"/>
+  <text class="t" x="608" y="44">Discrete action codes</text>
+  <text class="s" x="608" y="62">fixed length per 1-second</text>
+  <text class="s" x="608" y="76">chunk &mdash; no invalid tokens</text>
+
+  <line class="l" x1="158" y1="53" x2="192" y2="53"/>
+  <line class="l" x1="352" y1="53" x2="386" y2="53"/>
+  <line class="l" x1="558" y1="53" x2="592" y2="53"/>
+
+  <line class="l" x1="681" y1="86" x2="681" y2="128"/>
+  <line class="l" x1="474" y1="92" x2="474" y2="128"/>
+
+  <rect class="b" x="352" y="132" width="246" height="76"/>
+  <text class="t" x="364" y="156">Leg R &mdash; world model</text>
+  <text class="s" x="364" y="174">Wan2.2 TI2V-5B &amp; Cosmos-2.5-2B</text>
+  <text class="s" x="364" y="188">action flow painted into 49 channels</text>
+  <text class="s" x="364" y="202">of the video latent</text>
+
+  <rect class="rd" x="628" y="132" width="246" height="76"/>
+  <text class="t" x="640" y="156">Leg C &mdash; downstream policy</text>
+  <text class="s" x="640" y="174">codes drive a real robot policy;</text>
+  <text class="s" x="640" y="188">this leg has VETO power over</text>
+  <text class="s" x="640" y="202">every representation metric</text>
+
+  <line class="l" x1="475" y1="208" x2="475" y2="246"/>
+  <line class="l" x1="751" y1="208" x2="751" y2="246"/>
+
+  <rect class="b" x="330" y="250" width="290" height="66"/>
+  <text class="t" x="342" y="274">Video benchmarks</text>
+  <text class="s" x="342" y="292">PSNR / SSIM / LPIPS / FID / FVD /</text>
+  <text class="s" x="342" y="306">masked Emb-EPE / VBench / VLM judge</text>
+
+  <rect class="b" x="650" y="250" width="290" height="66"/>
+  <text class="t" x="662" y="274">LIBERO closed-loop success rate</text>
+  <text class="s" x="662" y="292">plus mandatory floors: repeat-frame,</text>
+  <text class="s" x="662" y="306">zero-action, and no-tokenizer control</text>
+
+  <rect class="b" x="8" y="132" width="300" height="184"/>
+  <text class="t" x="20" y="156">Three floors, always plotted</text>
+  <text class="s" x="20" y="178">copy_first &mdash; repeat the first frame</text>
+  <text class="s" x="20" y="196">pt_i2v &mdash; no action conditioning</text>
+  <text class="s" x="20" y="214">chunked GT &mdash; real actions, no tokenizer</text>
+  <text class="s" x="20" y="240">Without these, a still image scores</text>
+  <text class="s" x="20" y="256">near the top on most standard video</text>
+  <text class="s" x="20" y="272">metrics, and a tokenizer that destroys</text>
+  <text class="s" x="20" y="288">the action still looks respectable on</text>
+  <text class="s" x="20" y="304">per-step reconstruction error.</text>
+
+  <rect class="hi" x="8" y="340" width="932" height="48" rx="8"/>
+  <text class="t" x="22" y="362">Current step: the codes now feed a real VLA (&pi;0-FAST, PaliGemma-3B) instead of a 5M from-scratch policy &mdash;</text>
+  <text class="t" x="22" y="380">the same tokenizer slot, one competent policy, CAT vs FAST at matched budget.</text>
+</svg>
 </div>
 
-<h2>What the world model loses, and to what</h2>
-<p>The world model is conditioned on <em>action flow</em> &mdash; the image-plane displacement
-of visible surface points. The question is whether that interface survives being squeezed
-through a compact action code. It does not, but the failure decomposes cleanly.</p>
-<figure><img src="figs/01_gate_decomposition.png" alt="Emb-EPE by arm">
-<figcaption>Controllability (Emb-EPE, lower better) of the frozen world model when driven by
-real flow versus flow reconstructed from the code. The continuous arm is the first in this
-project to significantly clear the static floor; every discrete arm fails to.</figcaption></figure>
+<h2>Part 1 &mdash; Reproducing the world model, on two backbones</h2>
 
-<figure><img src="figs/02_cost_breakdown.png" alt="Cost breakdown">
-<figcaption>The 24.2&nbsp;px gap between real flow and the static floor, split by cause with
-each step's test status. The largest block by far is compression itself &mdash; which the
-continuous code loses too, so it is not a quantisation problem.</figcaption></figure>
+<p>We trained two arms that differ in exactly one thing. The first, <strong>action flow</strong>,
+paints the action into the image plane at the pixels where motion happens. The second,
+<strong>uniform broadcast</strong>, takes the same action vector and copies it across every
+spatial location &mdash; same number of channels, same injection point, same optimizer, same
+steps, same clips in the same order. So any difference is attributable to <em>spatial
+placement</em> and nothing else.</p>
 
-<h2>The result we did not expect</h2>
-<p>We built a rate-matched control: the same number of tokens per frame, but each token pooled
-over the whole image instead of tied to a location. That isolates <em>addressing</em> from
-<em>rate</em>. The two layers give opposite answers.</p>
-<figure><img src="figs/03_rate_vs_addressing.png" alt="Rate versus addressing">
-<figcaption>At the representation layer, extra tokens help and placement adds nothing
-(p&nbsp;=&nbsp;0.33). At the control layer, placement is what the world model needs. A
-tokenizer evaluated only on representation metrics would reach the opposite architectural
-conclusion.</figcaption></figure>
+<p>Against them we always plot two floors. <code>copy_first</code> simply repeats the first
+frame forever, and <code>pt_i2v</code> is the pretrained backbone with no action conditioning
+at all. These are not decoration: on this data roughly nine tenths of the pixels are static
+background, so a still image scores extremely well on any whole-frame metric. Without the
+floors you would draw the wrong conclusion.</p>
 
-<h2>What the code actually encodes</h2>
-<p>Shuffling the flow in time barely moves the code; reversing the direction of motion moves
-it almost as much as swapping in a completely different event. Order-invariant and
-sign-equivariant is the symmetry structure of a <em>sum</em> &mdash; which is independent
-confirmation that the visual view is supplying the <em>integrated</em> constraint that
-per-step action reconstruction provably cannot.</p>
-<figure><img src="figs/04_temporal_reversal.png" alt="Temporal reversal">
-<figcaption>The same fact is the sharpest limitation: two motions with equal net displacement
-but different temporal profiles are indistinguishable in this code.</figcaption></figure>
+<figure>
+  <img src="figs/11_motion_following.png" alt="Masked endpoint error on both backbones">
+  <figcaption>The metric that separates the arms: masked embodiment endpoint error, measuring
+  how closely generated motion tracks the real motion in the region that actually moves.
+  Action flow beats the still floor on both backbones. The uniform broadcast
+  <strong>loses to doing nothing</strong> &mdash; it knows motion should occur but not where, so it
+  invents a location. Right panel normalises by each backbone's own floor, because Wan renders
+  at 480&times;832 and Cosmos at 256&times;448 and raw pixel errors are not comparable across them.</figcaption>
+</figure>
 
-<figure><img src="figs/07_rollout_strip.png" alt="Rollout comparison">
-<figcaption>Qualitatively: driven through the code the world model produces plausible video
-that is <em>not the commanded motion</em>. The static floor, for contrast, does not move at
-all.</figcaption></figure>
+<figure>
+  <img src="figs/12_distribution.png" alt="FID and FVD on both backbones">
+  <figcaption>Distribution-side agreement. Action flow reaches FVD 155 on Wan and 134 on
+  Cosmos, against floors of 641 and 610. These are arm-versus-arm at matched sample count and
+  <strong>must not</strong> be read against the original paper's table &mdash; at n=100 the
+  covariance used by FVD is singular.</figcaption>
+</figure>
 
-<h2>Why the central question is currently unanswerable</h2>
-<p>&ldquo;Embodiment-agnostic&rdquo; should mean that given what actually happened in the
-world, the code says nothing extra about which body did it. Testing that requires the body to
-vary independently of everything else. On the standard corpus it does not.</p>
-<figure><img src="figs/05_conditional_identity.png" alt="Conditional identity probe">
-<figcaption>The scene alone identifies the data source at AUC&nbsp;1.0000 <em>within</em> an
-effect stratum, and both encoders take the scene as input. Even the raw inputs are
-near-perfectly separable, so &ldquo;does the code leak identity&rdquo; cannot be separated
-from &ldquo;does the code represent anything&rdquo;.</figcaption></figure>
-
-<div class="card ok">
-<b>The fix, built.</b> We render the <em>same</em> simulated scene with five genuinely
-different robots, verifying rather than asserting that the scenes match (initial object
-layouts agree to under a millimetre across arms). This makes the criterion measurable for the
-first time. It does <em>not</em> make the arm invisible &mdash; after the tie is broken, the
-scene predicting the body is legitimate morphology rather than a dataset fingerprint, and the
-two become distinguishable.
-</div>
-<figure><img src="figs/08_multibody_corpus.png" alt="Multibody corpus">
-<figcaption>Rows are the same scene; columns are different arms. Scene, camera and object
-placement are identical; the body is not.</figcaption></figure>
-
-<figure><img src="figs/09_camera_probe.png" alt="Camera probe">
-<figcaption>Choosing the camera by a pixel-difference metric would have picked
-<code>sideview</code> (highest score) and lost the task object; the correct choice,
-<code>frontview</code>, scored <em>lowest</em>. The camera was chosen by looking.</figcaption></figure>
-
-<h2>The verdict: downstream task success</h2>
-<p>This axis has veto power in the project, and it had never been applied to this tokenizer.
-The first run was <em>invalid</em> and its own control caught it: the no-tokenizer
-&ldquo;chunked&rdquo; arm scored 0.269 against an independently validated 0.756, meaning the
-harness&rsquo;s reconstruction &mdash; not the code &mdash; was being measured. With the
-validated upsampler the control returns to 0.789, and the real answer appears.</p>
-<figure><img src="figs/06_l4_sr.png" alt="L4 success rate">
-<figcaption>Actions passed through the code succeed on <b>0 of 52</b> episodes &mdash;
-identical to all-zero actions &mdash; against a fair ceiling of 0.789. Whatever the
-representation-layer metrics say, this code does not preserve executable action.</figcaption></figure>
-<div class="card warn">
-<b>Why the control mattered.</b> Had we run only ground truth versus decoded, we would have
-reached the <em>correct</em> conclusion (&ldquo;tokenizer scores zero, veto&rdquo;) on the
-basis of <em>wrong</em> evidence &mdash; 0.52 of that first gap was our own reconstruction
-defect, not the code.
+<div class="card">
+<p><strong>The headline, with confidence intervals.</strong> Paired bootstrap over the same 100
+clips in the same order, on Wan2.2: action flow beats uniform broadcast by
+<strong>+0.90 dB PSNR</strong> [+0.71, +1.09], <strong>+0.0127 SSIM</strong> [+0.0095, +0.0161],
+<strong>&minus;0.0233 LPIPS</strong> [&minus;0.0286, &minus;0.0182], and <strong>&minus;35.3 px</strong>
+endpoint error [&minus;41.3, &minus;29.4]. None of the intervals cross zero, and the direction is
+identical on the second backbone. Spatial placement of the action is doing real work.</p>
 </div>
 
-<h2>The metric this field reports does not predict what it cares about</h2>
-<p>Every action-tokenizer paper we surveyed &mdash; FAST, OAT, ActionCodec, X-Tokenizer &mdash;
-reports per-step reconstruction error as its headline fidelity number. On the same 52
-episodes, that metric and task success come apart completely.</p>
-<figure><img src="figs/10_recon_vs_execution.png" alt="Reconstruction versus execution">
-<figcaption>Per-step error is 2.84&times; worse; integrated error is <b>17.35&times;</b> worse;
-success goes 0.788 to 0.000. The errors did not merely grow, they became more
-<em>correlated</em> (integrated-over-per-step ratio 6.5 &rarr; 39.9), so they accumulate
-instead of cancelling. This is the strongest and most transferable result here, and it does
-not depend on our method working.</figcaption></figure>
+<figure>
+  <img src="figs/14_judge_protocols.png" alt="VLM judge and VBench results with floors">
+  <figcaption>Two standard evaluation protocols, each with the floor that exposes its failure
+  mode. <strong>Left:</strong> a VLM judge averaging four axes ranks the <em>still image</em>
+  first overall (4.00), because three of its four axes reward consistency and a frozen frame is
+  perfectly consistent. Only the motion-realism axis recovers the true ordering.
+  <strong>Right:</strong> VBench's dynamic-degree shows every arm under-moves about
+  2&times; versus ground truth &mdash; and taken alone VBench would rank the broadcast arm
+  <em>above</em> action flow, the exact opposite of what the motion-tracking metric says.</figcaption>
+</figure>
 
-<h2>Summary of measured numbers</h2>
-<table>
-<tr><th>Question</th><th>Arm / metric</th><th>Result</th><th>Status</th></tr>
-<tr><td>Does the code drive the world model?</td><td>Emb-EPE vs static floor</td>
-    <td>continuous 44.52 &middot; spatial 47.96 &middot; floor 53.94 &middot; real flow 29.74</td>
-    <td>all arms fail the &le;10% gate</td></tr>
-<tr><td>Addressing or rate?</td><td>paired, control layer</td>
-    <td>&minus;3.83&nbsp;px, CI [&minus;7.62, &minus;0.19]</td><td>significant</td></tr>
-<tr><td>Discretisation cost?</td><td>continuous &minus; discrete</td>
-    <td>&minus;3.44&nbsp;px, CI [&minus;7.57, +0.28]</td><td>not resolved</td></tr>
-<tr><td>Does the code carry direction?</td><td>reversal / different-event</td>
-    <td>0.77 &ndash; 1.09</td><td>yes, strongly</td></tr>
-<tr><td>Does it carry temporal order?</td><td>shuffle / different-event</td>
-    <td>0.08 &ndash; 0.34</td><td>weakly</td></tr>
-<tr><td>Is the code embodiment-agnostic?</td><td>within-stratum corpus AUC</td>
-    <td>scene alone 1.0000</td><td>unmeasurable on this corpus</td></tr>
-<tr><td><b>Can a robot still do the task?</b></td><td>LIBERO success rate</td>
-    <td><b>0.000</b> vs fair ceiling 0.789</td><td><b>veto</b></td></tr>
-<tr><td><b>Does per-step error predict executability?</b></td><td>per-step vs success</td>
-    <td>2.84&times; worse per-step &rarr; 0.788 to 0.000</td><td><b>no</b></td></tr>
-<tr><td>Does flow supervision cut integrated drift?</td><td>drift/per-step, 3 seed-matched pairs</td>
-    <td>12.83 vs 13.22, ranges overlap</td><td>negative (n=3)</td></tr>
-</table>
+<h3>Seeing it directly</h3>
+<p>Numbers were not enough here; the qualitative failure is specific and visible.</p>
+<figure>
+  <img src="figs/15_sheet_flow.png" alt="Action flow rollout frames">
+  <figcaption>Action-flow arm: the arm moves where it is told to move.</figcaption>
+</figure>
+<figure>
+  <img src="figs/16_sheet_native_spatial.png" alt="Uniform broadcast rollout frames">
+  <figcaption>Uniform-broadcast arm, same clips: the model knows something should move and
+  hallucinates motion in the wrong place &mdash; sometimes inventing an extra limb. This is what
+  "worse than not moving" looks like.</figcaption>
+</figure>
 
-<footer>
-Results are reproduced from the project ledger. Figures are generated directly from the
-recorded result files; nothing here is recomputed or smoothed. Where a comparison is not
-statistically resolved, the figure says so.
-</footer>
+<h2>Part 2 &mdash; The finding we did not go looking for</h2>
 
-</div></body></html>
+<p>Having a world model that follows action flow, we turned to compressing actions into
+discrete tokens. Here we hit a result that we think matters beyond this project.</p>
+
+<figure>
+  <img src="figs/10_recon_vs_execution.png" alt="Per-step error versus task success">
+  <figcaption>Every action-tokenizer paper we surveyed reports <strong>per-step reconstruction
+  error</strong> as its headline fidelity number. On the same 52 LIBERO episodes, passing actions
+  through our code made per-step error only 2.84&times; worse &mdash; the same order of magnitude &mdash;
+  while task success collapsed from 0.788 to <span class="bad">0.000</span>. The reason is in the
+  middle panel: <em>integrated</em> error grew 17.35&times;, six times more than the per-step number.
+  The errors stopped cancelling and started accumulating.</figcaption>
+</figure>
+
+<div class="card">
+<p><strong>Why this happens.</strong> Robot actions are relative &mdash; each one displaces the arm
+from where the last one left it &mdash; so a controller integrates them. A per-step objective says
+nothing about whether consecutive errors are independent or correlated. We measured the
+lag-1 autocorrelation of the error at 0.6446, which means drift grows roughly in proportion to
+horizon length rather than to its square root. Two further independent measurements agree: the
+code turns out to be invariant to the <em>order</em> of a chunk while remaining sensitive to its
+sign, which is the signature of a representation that has learned a sum.</p>
+<p><strong>The consequence for the field:</strong> a tokenizer paper reporting only per-step
+reconstruction is reporting a number that is nearly uninformative about whether the codes can
+still drive a robot. This conclusion does not depend on our method working.</p>
+</div>
+
+<figure>
+  <img src="figs/03_rate_vs_addressing.png" alt="Rate versus addressing at two layers">
+  <figcaption>A related trap. At the representation layer, what helps is <em>rate</em> &mdash;
+  more tokens &mdash; and spatial placement adds nothing measurable (p=0.33). At the control
+  layer the ordering reverses: placement is what helps. A tokenizer tuned only on
+  representation metrics would reach the opposite architectural conclusion from one tuned on
+  control.</figcaption>
+</figure>
+
+<h2>Part 3 &mdash; The verdict, and what was actually blocking us</h2>
+
+<figure>
+  <img src="figs/06_l4_sr.png" alt="LIBERO success rates with floors">
+  <figcaption>Our own rule is that downstream task success overrides every representation
+  metric. Under a <em>validated</em> control, actions passed through the code scored 0.000 &mdash;
+  identical to sending zeros &mdash; against a fair ceiling of 0.788 for the same chunking without
+  a tokenizer. Note the control: our first attempt scored the no-tokenizer arm at 0.269, which
+  should have been ~0.76. That gap was a bug in our own reconstruction, not the tokenizer. Had
+  we run only "raw versus decoded" we would have reached the right verdict from the wrong
+  evidence.</figcaption>
+</figure>
+
+<figure>
+  <img src="figs/13_policy_bottleneck.png" alt="Policy bottleneck analysis">
+  <figcaption>Then we found the confound. The policy consuming those codes was a ~5M-parameter
+  transformer trained from scratch. It gets about 48% of individual codes right, but a chunk is
+  32 codes, so the chance of an entirely correct chunk is around 10<sup>&minus;10</sup> &mdash; and
+  indeed it was <strong>never once</strong> correct. It also overfits after roughly 7 of its 148
+  epochs. <strong>The tokenizer axis and the policy axis were confounded</strong>, and no tokenizer
+  result could have surfaced through a policy this weak.</figcaption>
+</figure>
+
+<div class="card">
+<p><strong>What we are running now.</strong> The comparison target, OAT, reports 33.4% success on
+LIBERO &mdash; but that number comes from a fully fine-tuned 2.2-billion-parameter
+vision-language model, not from a 5M policy. So we moved the codes into a real VLA:
+<strong>&pi;0-FAST</strong>, a PaliGemma-3B model whose action interface is already a discrete
+token stream, which is precisely the slot a CAT code sequence occupies. Two arms, identical in
+every respect except the tokenizer, at a matched 30k-step budget.</p>
+<p class="warn">Stated up front, because it would be easy to overclaim: beating 33.4% in
+absolute terms is <em>not</em> a like-for-like comparison. &pi;0-FAST's base checkpoint is
+pretrained on a large robot corpus, while OAT's backbone is a general vision-language model
+with no robot pretraining. A higher absolute number is mostly the backbone. The defensible
+claim is CAT versus FAST inside the same policy at the same budget, and we will report the two
+separately. Hydra-0 itself reports no LIBERO success rate at all, so on this benchmark there is
+no Hydra-0 number to beat.</p>
+</div>
+
+<h2>Part 4 &mdash; The cross-embodiment corpus</h2>
+
+<p>Testing whether a shared vocabulary is genuinely shared requires data where the robot
+changes and <em>nothing else does</em>. Otherwise "which robot" is perfectly predictable from
+the scene, and any identity-leakage measurement is meaningless &mdash; which is exactly what we
+measured on our earlier corpus, where scene alone identified the dataset perfectly.</p>
+
+<figure>
+  <img src="figs/08_multibody_corpus.png" alt="Five robot arms in matched scenes">
+  <figcaption>Five arms performing the same task from the same verified initial state
+  (matched to under a millimetre), same camera, same lighting, same objects. Rows are scenes,
+  columns are robots.</figcaption>
+</figure>
+
+<div class="vids">
+  <figure><video src="videos/Lift_Panda_ep000.mp4" muted loop autoplay playsinline></video><figcaption>Panda</figcaption></figure>
+  <figure><video src="videos/Lift_UR5e_ep000.mp4" muted loop autoplay playsinline></video><figcaption>UR5e</figcaption></figure>
+  <figure><video src="videos/Lift_Jaco_ep000.mp4" muted loop autoplay playsinline></video><figcaption>Jaco</figcaption></figure>
+  <figure><video src="videos/Lift_IIWA_ep000.mp4" muted loop autoplay playsinline></video><figcaption>IIWA</figcaption></figure>
+  <figure><video src="videos/Lift_Kinova3_ep000.mp4" muted loop autoplay playsinline></video><figcaption>Kinova3</figcaption></figure>
+</div>
+
+<h2>All measured numbers</h2>
+
+<h3>World model reproduction &mdash; Wan2.2 TI2V-5B (n=100 matched clips)</h3>
+<div class="tw"><table>
+<tr><th>Metric</th><th>action flow</th><th>uniform broadcast</th><th>copy_first</th><th>pt_i2v</th></tr>
+<tr><td>PSNR &uarr;</td><td class="n">18.345</td><td class="n">17.447</td><td class="n">18.494</td><td class="n">15.193</td></tr>
+<tr><td>SSIM &uarr;</td><td class="n">0.8018</td><td class="n">0.7891</td><td class="n">0.8239</td><td class="n">0.5864</td></tr>
+<tr><td>LPIPS &darr;</td><td class="n">0.1653</td><td class="n">0.1886</td><td class="n">0.1620</td><td class="n">0.3322</td></tr>
+<tr><td>FID &darr;</td><td class="n"><strong>26.19</strong></td><td class="n">33.28</td><td class="n">54.18</td><td class="n">43.47</td></tr>
+<tr><td>FVD &darr;</td><td class="n"><strong>155.47</strong></td><td class="n">201.14</td><td class="n">641.04</td><td class="n">514.86</td></tr>
+<tr><td>masked Emb-EPE px &darr;</td><td class="n"><strong>43.67</strong></td><td class="n">78.96</td><td class="n">63.10</td><td class="n">69.79</td></tr>
+<tr><td>VLM judge, motion axis &uarr;</td><td class="n"><strong>1.94</strong></td><td class="n">1.47</td><td class="n">1.04</td><td class="n">1.17</td></tr>
+<tr><td>VBench dynamic degree</td><td class="n">0.25</td><td class="n">0.33</td><td class="n">0.00</td><td class="n">0.35</td></tr>
+</table></div>
+<p class="stamp">Ground-truth video re-encoded through the same decoder scores 0.63 on dynamic
+degree, so all arms under-move. Subject/background consistency for the still floor is 1.000
+against ground truth's 0.958 &mdash; a "perfect" score that is pathological, which is why
+consistency metrics are never quoted alone here.</p>
+
+<h3>World model reproduction &mdash; Cosmos-Predict2.5-2B (n=100)</h3>
+<div class="tw"><table>
+<tr><th>Metric</th><th>action flow</th><th>uniform broadcast</th><th>copy_first</th></tr>
+<tr><td>PSNR &uarr;</td><td class="n">17.93</td><td class="n">17.78</td><td class="n">18.50</td></tr>
+<tr><td>FID &darr;</td><td class="n"><strong>25.68</strong></td><td class="n">28.91</td><td class="n">52.60</td></tr>
+<tr><td>FVD &darr;</td><td class="n"><strong>134.17</strong></td><td class="n">167.87</td><td class="n">610.19</td></tr>
+<tr><td>masked Emb-EPE px &darr;</td><td class="n"><strong>28.94</strong></td><td class="n">38.52</td><td class="n">35.18</td></tr>
+</table></div>
+<p class="stamp">The no-conditioning floor on this backbone is degenerate (FVD 5196) and is
+marked unusable; the still floor is used for the distribution-side judgement instead. Root
+cause is still open &mdash; candidates are the sampling schedule and absence of guidance, not the
+positional-encoding convention, which we corrected and which changed the arms by less than
+noise.</p>
+
+<h3>Tokenizer, on LIBERO (52 episodes, three suites)</h3>
+<div class="tw"><table>
+<tr><th>Arm</th><th>Success</th><th>What it is</th></tr>
+<tr><td>raw demo actions</td><td class="n good">0.8846</td><td>true ceiling; harness sanity check</td></tr>
+<tr><td>chunked ground truth</td><td class="n good">0.7885</td><td>fair ceiling &mdash; same chunking, no tokenizer</td></tr>
+<tr><td>through the code</td><td class="n bad">0.0000</td><td>the tokenizer under test</td></tr>
+<tr><td>zero actions</td><td class="n">0.0000</td><td>trivial floor</td></tr>
+</table></div>
+<div class="tw"><table>
+<tr><th>Reconstruction vs execution</th><th>chunked GT</th><th>through the code</th><th>ratio</th></tr>
+<tr><td>per-step L2 (the field's headline)</td><td class="n">0.21234</td><td class="n">0.60256</td><td class="n">2.84&times;</td></tr>
+<tr><td>integrated L2</td><td class="n">1.3860</td><td class="n">24.0516</td><td class="n bad">17.35&times;</td></tr>
+<tr><td>task success</td><td class="n">0.788</td><td class="n bad">0.000</td><td class="n">&mdash;</td></tr>
+</table></div>
+
+<h3>Downstream policy diagnosis</h3>
+<div class="tw"><table>
+<tr><th>Quantity</th><th>Value</th></tr>
+<tr><td>training corpus</td><td class="n">69,145 chunks &times; 32 codes</td></tr>
+<tr><td>per-token accuracy</td><td class="n">0.4832</td></tr>
+<tr><td>whole-chunk accuracy</td><td class="n bad">0.0000</td></tr>
+<tr><td>train / validation loss at 40k steps</td><td class="n">0.0866 / 5.6564</td></tr>
+<tr><td>best checkpoint</td><td class="n">step 2,000 of 40,000</td></tr>
+</table></div>
+
+<h2>What we are careful about</h2>
+<p>Three honest limits travel with every number here. Our corpus is about 439 hours, roughly
+a fifth of what the original paper used, and one dataset supplies two thirds of it. The paper
+does not report its optimizer, learning-rate schedule, batch size, sampling ratios or step
+counts, so those are <em>our</em> choices and not a reproduction of theirs. And it reports
+compute only for a larger backbone than either of the two we target, so all comparisons
+between our arms are step-matched to each other rather than to the paper.</p>
+<p>We also keep a standing rule that a metric may not be quoted without its floor. It has
+already caught three separate mistakes on this project: a still image ranked first by a VLM
+judge, a benchmark that ranked the worse arm higher, and a broken control that would have made
+a correct conclusion rest on wrong evidence.</p>
+
+<p class="foot">
+<span class="pill">&le;16 H200 for training</span>
+<span class="pill">two video backbones</span>
+<span class="pill">five-arm matched corpus</span>
+<span class="pill">floors on every metric</span><br><br>
+Figures are generated directly from the logged result ledger; each corresponds to a numbered
+entry with its SLURM job id. Cross-embodiment held-out evaluation and the &pi;0-FAST
+tokenizer-swap comparison are in progress.
+</p>
+
+</div>
+</body>
+</html>
