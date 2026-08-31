@@ -58,14 +58,33 @@
 action tokenizer actually has to preserve.</p>
 <p class="stamp">Academic-scale study &mdash; all training fits in &le;16 H200 GPUs.
 Every number on this page is traceable to a logged SLURM job in the project ledger.
-Last updated 2026-08-28.</p>
+Last updated 2026-09-01.</p>
 
-<p class="lede">The short version: we reproduced the core claim of the action-flow world
-model on two different video backbones, and it holds &mdash; a spatially <em>placed</em>
-action signal follows commanded motion, while a spatially uniform one is
-<strong>worse than not moving at all</strong>. Then we tried to compress actions into
-discrete tokens, and found that the fidelity metric this entire subfield reports
-<strong>barely predicts whether the actions still work on a robot</strong>.</p>
+<p class="lede">The headline, as of the latest run: on the <strong>held-out-embodiment
+benchmark we built</strong> &mdash; a policy trained on four robots, evaluated closed-loop on a
+fifth it never saw &mdash; the CAT tokenizer succeeds <strong>15&times; more often than
+FAST</strong> (0.150 vs 0.010 over 200 episodes, Fisher p&nbsp;=&nbsp;8.8e-08). The same two
+tokenizers, in the same policy at matched budget, rank the <em>opposite</em> way on a
+single-body benchmark. A shared cross-embodiment vocabulary costs ~3 points at home and
+pays 15&times; abroad &mdash; and nobody had an instrument that could see the second half
+until now. (Second rotation, with a different held-out robot, is running; the pre-registered
+verdict waits for it.)</p>
+
+<figure>
+  <img src="figs/16_mirror_pair.png" alt="Mirror pair: in-corpus vs held-out ordering flip">
+  <figcaption><strong>The central result as one picture.</strong> Left: on in-distribution
+  LIBERO the FAST baseline wins by ~3 points (that experiment is what sent us looking for the
+  right track). Right: on the held-out body, with the expert ceiling and zero floor that make
+  the number readable, CAT transfers and FAST essentially does not. Direction is consistent
+  across two disjoint seed blocks (6/50 then 24/150 vs 1/50 then 1/150).</figcaption>
+</figure>
+
+<p class="lede" style="border-left-color:#7f7f7f">Before that: we reproduced the core claim
+of the action-flow world model on two video backbones &mdash; a spatially <em>placed</em>
+action signal follows commanded motion while a uniform broadcast is <strong>worse than not
+moving</strong> &mdash; and found along the way that the per-step reconstruction metric this
+subfield reports <strong>barely predicts whether actions still work on a
+robot</strong>.</p>
 
 <h2>What this project is, in plain terms</h2>
 
@@ -345,6 +364,38 @@ measured on our earlier corpus, where scene alone identified the dataset perfect
   <figure><video src="videos/Lift_Kinova3_ep000.mp4" muted loop autoplay playsinline></video><figcaption>Kinova3</figcaption></figure>
 </div>
 
+<h2>Part 5 &mdash; The held-out-embodiment benchmark (new)</h2>
+
+<p>Every cross-embodiment tokenizer paper we surveyed claims a shared vocabulary across
+robots; none of them ever <em>held a robot out</em> and asked whether a policy using that
+vocabulary transfers to it. The blocker is data: public multi-robot corpora store actions but
+no simulator states or images, so a closed-loop evaluation on a new body was impossible. We
+generated the missing corpus ourselves &mdash; a scripted OSC-space expert (reach, descend,
+grasp, lift) that is body-generic by construction, run on five genuinely different arms in
+matched scenes, keeping only episodes the environment itself scores as successful, and saving
+frames, wrist camera, proprioception and full MuJoCo states.</p>
+
+<figure>
+  <img src="figs/17_benchmark_anatomy.png" alt="Corpus and expert debugging history">
+  <figcaption>Left: the corpus &mdash; 501 successful demonstrations; per-body expert success
+  rate and kept counts travel with the data, because a weak body's demos are both scarcer and
+  easier. Right: getting one scripted expert to work across five bodies took eight
+  diagnostic-driven rounds &mdash; grasp dwell for slow grippers, a lateral close gate after
+  signed diagnostics showed a 2&nbsp;mm-vs-7&nbsp;mm off-centre pinch cliff, integral control
+  for OSC steady-state error, per-gripper close height. The per-body differences the debugging
+  exposed are precisely the variation a cross-embodiment method claims to handle.</figcaption>
+</figure>
+
+<p>The experiment: train &pi;<sub>0</sub>-FAST on four bodies' demonstrations (Jaco held out,
+202 episodes, 8k steps, both arms matched in everything but the tokenizer), then evaluate
+closed-loop on Jaco &mdash; new arm in the pixels, new dynamics under the same end-effector
+interface. Calibration first: the scripted expert scores 0.71&ndash;0.76 on Jaco through the
+eval harness (the ceiling), zero actions score 0.000 (the floor). Then the policies:
+<strong>CAT 30/200 = 0.150, FAST 2/200 = 0.010</strong>. Fisher exact p = 8.8e-08; bootstrap
+95% CI on the difference [0.090, 0.190]. One caveat, stated plainly: our pre-registered
+criterion requires the direction to hold on a second held-out robot before "CAT wins" is
+declared &mdash; that rotation (IIWA held out, a different gripper class) is training now.</p>
+
 <h2>All measured numbers</h2>
 
 <h3>World model reproduction &mdash; Wan2.2 TI2V-5B (n=100 matched clips)</h3>
@@ -392,6 +443,31 @@ noise.</p>
 <tr><td>integrated L2</td><td class="n">1.3860</td><td class="n">24.0516</td><td class="n bad">17.35&times;</td></tr>
 <tr><td>task success</td><td class="n">0.788</td><td class="n bad">0.000</td><td class="n">&mdash;</td></tr>
 </table></div>
+
+<h3>Matched tokenizer comparison in &pi;<sub>0</sub>-FAST (30k steps, LIBERO, 100 ep/suite)</h3>
+<div class="tw"><table>
+<tr><th>suite</th><th>CAT</th><th>FAST</th><th>&Delta;</th></tr>
+<tr><td>libero_object</td><td class="n">0.98</td><td class="n good">1.00</td><td class="n">&minus;0.02</td></tr>
+<tr><td>libero_spatial</td><td class="n">0.93</td><td class="n good">0.96</td><td class="n">&minus;0.03</td></tr>
+<tr><td>libero_goal</td><td class="n">0.92</td><td class="n good">0.96</td><td class="n">&minus;0.04</td></tr>
+<tr><td><strong>aggregate</strong></td><td class="n">0.9433</td><td class="n good">0.9733</td><td class="n">&minus;0.030 (CI [&minus;6.2, +0.2]pp)</td></tr>
+</table></div>
+<p class="stamp">FAST ahead on all three suites in-distribution &mdash; the shared vocabulary
+pays a real cost at home. Both absolute numbers are dominated by the robot-pretrained
+&pi;<sub>0</sub>-FAST base and must not be read against OAT's 33.4% (its SmolVLM2 backbone
+has no robot pretraining; the matched FAST arm is the control proving the point).</p>
+
+<h3>Held-out-embodiment benchmark (Jaco, 200 ep/arm, pooled over 2 seed blocks)</h3>
+<div class="tw"><table>
+<tr><th>arm</th><th>SR</th><th>count</th></tr>
+<tr><td>expert (data-generating ceiling)</td><td class="n">0.71&ndash;0.76</td><td>per-block</td></tr>
+<tr><td><strong>CAT policy</strong></td><td class="n good">0.150</td><td>30/200</td></tr>
+<tr><td>FAST policy</td><td class="n bad">0.010</td><td>2/200</td></tr>
+<tr><td>zero actions (floor)</td><td class="n">0.000</td><td>0/200</td></tr>
+</table></div>
+<p class="stamp">Fisher exact p = 8.8e-08; bootstrap 95% CI on &Delta; = [0.090, 0.190];
+direction consistent across both disjoint seed blocks. Pre-registered full verdict awaits a
+second rotation (IIWA held out), currently training.</p>
 
 <h3>Downstream policy diagnosis</h3>
 <div class="tw"><table>
