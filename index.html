@@ -60,23 +60,26 @@ action tokenizer actually has to preserve.</p>
 Every number on this page is traceable to a logged SLURM job in the project ledger.
 Last updated 2026-09-01.</p>
 
-<p class="lede">The headline, as of the latest run: on the <strong>held-out-embodiment
-benchmark we built</strong> &mdash; a policy trained on four robots, evaluated closed-loop on a
-fifth it never saw &mdash; the CAT tokenizer succeeds <strong>15&times; more often than
-FAST</strong> (0.150 vs 0.010 over 200 episodes, Fisher p&nbsp;=&nbsp;8.8e-08). The same two
-tokenizers, in the same policy at matched budget, rank the <em>opposite</em> way on a
-single-body benchmark. A shared cross-embodiment vocabulary costs ~3 points at home and
-pays 15&times; abroad &mdash; and nobody had an instrument that could see the second half
-until now. (Second rotation, with a different held-out robot, is running; the pre-registered
-verdict waits for it.)</p>
+<p class="lede">The headline, updated the moment rotation 2 landed: on the
+<strong>held-out-embodiment benchmark we built</strong> &mdash; a policy trained on four
+robots, evaluated closed-loop on a fifth it never saw &mdash; there is <strong>no consistent
+tokenizer winner</strong>. Holding out <em>Jaco</em>, CAT succeeds 15&times; more often than
+FAST (0.150 vs 0.010, p&nbsp;=&nbsp;8.8e-08). Holding out <em>IIWA</em>, FAST succeeds
+11&times; more often than CAT (0.330 vs 0.030, p&nbsp;=&nbsp;3.2e-16). Both rotations are
+individually decisive and point in <em>opposite directions</em>: what dominates out-of-body
+transfer is a large <strong>tokenizer&thinsp;&times;&thinsp;body interaction</strong>, not a
+uniform advantage. Our pre-registered win criterion required direction consistency across two
+rotations &mdash; it was not met, and we say so here rather than leading with the rotation we
+liked. (An earlier version of this page led with the Jaco result, flagged as awaiting
+rotation 2; this is that update.)</p>
 
 <figure>
-  <img src="figs/16_mirror_pair.png" alt="Mirror pair: in-corpus vs held-out ordering flip">
-  <figcaption><strong>The central result as one picture.</strong> Left: on in-distribution
-  LIBERO the FAST baseline wins by ~3 points (that experiment is what sent us looking for the
-  right track). Right: on the held-out body, with the expert ceiling and zero floor that make
-  the number readable, CAT transfers and FAST essentially does not. Direction is consistent
-  across two disjoint seed blocks (6/50 then 24/150 vs 1/50 then 1/150).</figcaption>
+  <img src="figs/16_mirror_pair.png" alt="Mirror pair: in-corpus vs held-out Jaco rotation">
+  <figcaption><strong>Rotation 1 of 2 (Jaco held out).</strong> Left: on in-distribution
+  LIBERO the FAST baseline wins by ~3 points. Right: holding out Jaco, CAT transfers and FAST
+  essentially does not &mdash; but see the table below: holding out IIWA instead
+  <em>reverses</em> the ordering just as decisively. Neither rotation alone is the story; the
+  interaction is.</figcaption>
 </figure>
 
 <p class="lede" style="border-left-color:#7f7f7f">Before that: we reproduced the core claim
@@ -394,7 +397,10 @@ eval harness (the ceiling), zero actions score 0.000 (the floor). Then the polic
 <strong>CAT 30/200 = 0.150, FAST 2/200 = 0.010</strong>. Fisher exact p = 8.8e-08; bootstrap
 95% CI on the difference [0.090, 0.190]. One caveat, stated plainly: our pre-registered
 criterion requires the direction to hold on a second held-out robot before "CAT wins" is
-declared &mdash; that rotation (IIWA held out, a different gripper class) is training now.</p>
+declared. That rotation (IIWA held out, a different gripper class) has since landed and
+<strong>reversed the ordering</strong> (FAST 0.330 vs CAT 0.030, p&nbsp;=&nbsp;3.2e-16) &mdash;
+so the criterion was not met, and the honest summary is a strong tokenizer&times;body
+interaction rather than a uniform CAT advantage. See the two-rotation table below.</p>
 
 <h2>All measured numbers</h2>
 
@@ -457,17 +463,20 @@ pays a real cost at home. Both absolute numbers are dominated by the robot-pretr
 &pi;<sub>0</sub>-FAST base and must not be read against OAT's 33.4% (its SmolVLM2 backbone
 has no robot pretraining; the matched FAST arm is the control proving the point).</p>
 
-<h3>Held-out-embodiment benchmark (Jaco, 200 ep/arm, pooled over 2 seed blocks)</h3>
+<h3>Held-out-embodiment benchmark: both leave-one-out rotations (200 ep/arm each)</h3>
 <div class="tw"><table>
-<tr><th>arm</th><th>SR</th><th>count</th></tr>
-<tr><td>expert (data-generating ceiling)</td><td class="n">0.71&ndash;0.76</td><td>per-block</td></tr>
-<tr><td><strong>CAT policy</strong></td><td class="n good">0.150</td><td>30/200</td></tr>
-<tr><td>FAST policy</td><td class="n bad">0.010</td><td>2/200</td></tr>
-<tr><td>zero actions (floor)</td><td class="n">0.000</td><td>0/200</td></tr>
+<tr><th>held-out body</th><th>expert ceiling</th><th>CAT policy</th><th>FAST policy</th><th>zero floor</th><th>Fisher p</th><th>winner</th></tr>
+<tr><td>Jaco (3-finger gripper)</td><td class="n">0.71&ndash;0.76</td><td class="n good">0.150 (30/200)</td><td class="n">0.010 (2/200)</td><td class="n">0.000</td><td class="n">8.8e-08</td><td>CAT, 15&times;</td></tr>
+<tr><td>IIWA (7-DoF, Panda-like)</td><td class="n">1.00</td><td class="n">0.030 (6/200)</td><td class="n good">0.330 (66/200)</td><td class="n">0.000</td><td class="n">3.2e-16</td><td>FAST, 11&times;</td></tr>
 </table></div>
-<p class="stamp">Fisher exact p = 8.8e-08; bootstrap 95% CI on &Delta; = [0.090, 0.190];
-direction consistent across both disjoint seed blocks. Pre-registered full verdict awaits a
-second rotation (IIWA held out), currently training.</p>
+<p class="stamp"><strong>Pre-registered win criterion (direction consistent across &ge;2
+rotations): NOT MET.</strong> Both rotations are individually decisive with opposite signs
+&mdash; a strong tokenizer&times;body interaction, not noise and not a uniform winner. Known
+limitation: one training seed per arm per rotation, so rotation-to-rotation flips are
+confounded with training stochasticity; seed replication is the next experiment. The
+benchmark instrument itself held up: ceilings and floors are clean in both rotations, and it
+resolves effects of 11&ndash;15&times; &mdash; it is the first instrument that can even ask
+this question.</p>
 
 <h3>Downstream policy diagnosis</h3>
 <div class="tw"><table>
